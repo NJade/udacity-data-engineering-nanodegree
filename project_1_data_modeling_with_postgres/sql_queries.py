@@ -13,7 +13,7 @@ songplay_table_create = ("""
         start_time BIGINT, \
         user_id INT, \
         level VARCHAR, \
-        song_id INT, \
+        song_id VARCHAR, \
         artist_id VARCHAR, \
         session_id INT, \
         location VARCHAR,\
