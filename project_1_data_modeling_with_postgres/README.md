@@ -15,7 +15,7 @@
 - You want to check the results, run test.ipynb.
 
 ## Schema
-<img src="./schema.png" alt="schema" width="800px" height="800px"/>
+<img src="schema.PNG" alt="schema" width="500px" height="500px"/>
 
 ### Reference
 - [Million Song Dataset](http://millionsongdataset.com/)
