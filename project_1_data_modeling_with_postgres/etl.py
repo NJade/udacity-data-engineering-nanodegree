@@ -6,6 +6,17 @@ from sql_queries import *
 
 
 def process_song_file(cur, filepath):
+    """
+    ETL of song json file. 
+    - Read song json file.
+    - Extract song and artist meta data.
+    - Insert into respective tables.
+    
+    Parameters
+    ---------
+    cur: psycopg2 cursor object.
+    filepath: song json file path.
+    """
     # open song file
     df = pd.read_json(filepath, lines=True)
 
@@ -19,6 +30,18 @@ def process_song_file(cur, filepath):
 
 
 def process_log_file(cur, filepath):
+    """
+    ETL of log json file. 
+    - Read log json file.
+    - Filter page attribute is NestSong.
+    - Extract timestamp, user, and log meta data.
+    - Insert into respective tables.
+    
+    Parameters
+    ---------
+    cur: psycopg2 cursor object.
+    filepath: log json file path.
+    """
     # open log file
     df = pd.read_json(filepath, lines=True)
 
@@ -61,6 +84,19 @@ def process_log_file(cur, filepath):
 
 
 def process_data(cur, conn, filepath, func):
+    """
+    ETL of Sparkify data.
+    - Read files.
+    - Extract meta data.
+    - Insert into respective tables.
+    
+    Parameters
+    ---------
+    cur: psycopg2 cursor object.
+    conn: psycopg2 connect object.
+    filepath: json file path.
+    func: ETL function.
+    """
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
@@ -80,6 +116,9 @@ def process_data(cur, conn, filepath, func):
 
 
 def main():
+    """
+    Connect database and process ETL process.
+    """
     conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=student password=student")
     cur = conn.cursor()
 
