@@ -5,6 +5,17 @@ import configparser
 import sys
 
 def create_iam_role(iam, config):
+    '''Create IAM role and attach role policy.
+    
+    Parameters
+    ----------
+    iam: AWS IAM client.
+    config: AWS config.
+    
+    Returns
+    -------
+    IAM role arn.
+    '''
     IAM_ROLE_NAME = config.get('IAM_ROLE', 'NAME')
     dwhRole = iam.create_role(
         Path = '/',
@@ -25,6 +36,13 @@ def create_iam_role(iam, config):
     return iam.get_role(RoleName = IAM_ROLE_NAME)['Role']['Arn']
     
 def delete_iam_role(iam, config):
+    '''Detatch IAM role policy and delete IAM role.
+    
+    Parameters
+    ----------
+    iam: AWS IAM client.
+    config: AWS config.
+    '''
     IAM_ROLE_NAME = config.get('IAM_ROLE', 'NAME')
     POLICY_ARN = config.get("IAM_ROLE", "ARN")
     iam.detach_role_policy(RoleName = IAM_ROLE_NAME,
@@ -32,6 +50,14 @@ def delete_iam_role(iam, config):
     iam.delete_role(RoleName = IAM_ROLE_NAME)
     
 def create_redshift_cluster(redshift, iam_role_arn, config):
+    '''Create redshift cluster.
+    
+    Parameters
+    ----------
+    redshift: AWS redshift client.
+    iam_role_arn: AWS IAM role arn.
+    config: AWS config.
+    '''
     DWH_CLUSTER_TYPE = config.get("DWH", "CLUSTER_TYPE")
     NODE_TYPE = config.get("DWH", "NODE_TYPE")
     DWH_NUM_NODES = config.get("DWH", "NUM_NODES")
@@ -52,10 +78,25 @@ def create_redshift_cluster(redshift, iam_role_arn, config):
     )
 
 def delete_redshift_cluster(redshift, config):
+     '''Delete redshift cluster.
+    
+    Parameters
+    ----------
+    redshift: AWS redshift client.
+    config: AWS config.
+    '''
     DWH_CLUSTER_IDENTIFIER = config.get("DWH", "CLUSTER_IDENTIFIER")
     redshift.delete_cluster( ClusterIdentifier=DWH_CLUSTER_IDENTIFIER,  SkipFinalClusterSnapshot=True)
     
 def open_inbound_ip(ec2, redshift, config):
+     '''Allow inbound traffic.
+    
+    Parameters
+    ----------
+    ec2: AWS ec2 client.
+    redshift: AWS redshift client.
+    config: AWS config.
+    '''
     DWH_CLUSTER_IDENTIFIER = config.get("DWH", "CLUSTER_IDENTIFIER")
     DWH_PORT = config.get("DWH", "PORT")
     
@@ -74,12 +115,25 @@ def open_inbound_ip(ec2, redshift, config):
     )
     
 def get_cluster_info(redshift, config):
+    '''Print redshift cluster endpoint and role arn.
+    
+    Parameters
+    ----------
+    redshift: AWS redshift client.
+    config: AWS config.
+    '''
     DWH_CLUSTER_IDENTIFIER = config.get("DWH", "CLUSTER_IDENTIFIER")
     cluster_props = redshift.describe_clusters(ClusterIdentifier=DWH_CLUSTER_IDENTIFIER)['Clusters'][0]
     print("END_POINT: " + cluster_props['Endpoint']['Address'])
     print("DWH_ROLE_ARN: " +  cluster_props['IamRoles'][0]['IamRoleArn'])
     
 def main(argv):
+    '''main function
+
+    Parameters
+    ----------
+    argv: argument, must be 'c', 'd' or 'g'.
+    '''
     config = configparser.ConfigParser()
     config.read_file(open('iac.cfg'))
 
