@@ -4,7 +4,7 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, col, to_date, monotonically_increasing_id
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, date_format, dayofweek
-from pyspark.sql.types import TimestampType, DateType
+from pyspark.sql.types import TimestampType, DateType, IntegerType, StringType, DoubleType, LongType, StructType, StructField
 
 config = configparser.ConfigParser()
 config.read('dl.cfg')
@@ -35,7 +35,20 @@ def process_song_data(spark, input_data, output_data):
     song_data = f'{input_data}song_data/*/*/*/*.json'
 
     # read song data file
-    df = spark.read.json(song_data)
+    schema = StructType([
+        StructField('num_songs', IntegerType()),
+        StructField('artist_id', StringType()),
+        StructField('artist_latitude', DoubleType()),
+        StructField('artist_longitude', DoubleType()),
+        StructField('artist_location', StringType()),
+        StructField('artist_name', StringType()),
+        StructField('song_id', StringType()),
+        StructField('title', StringType()),
+        StructField('duration', DoubleType()),
+        StructField('year', IntegerType())
+    ])
+    
+    df = spark.read.schema(schema).json(song_data)
 
     # extract columns to create songs table
     songs_table = df.filter(df.song_id.isNotNull()).select('song_id', 'title', 'artist_id', 'year', 'duration').distinct()
@@ -67,7 +80,28 @@ def process_log_data(spark, input_data, output_data):
     log_data = f'{input_data}log_data/*/*/*.json'
     
     # read log data file
-    df = spark.read.json(log_data)
+    schema = StructType([
+        StructField('artist', StringType()),
+        StructField('auth', StringType()),
+        StructField('firstName', StringType()),
+        StructField('gender', StringType()),
+        StructField('itemInSession', IntegerType()),
+        StructField('lastName', StringType()),
+        StructField('legnth', DoubleType()),
+        StructField('level', StringType()),
+        StructField('location', StringType()),
+        StructField('method', StringType()),
+        StructField('page', StringType()),
+        StructField('registration', DoubleType()),
+        StructField('sessionId', IntegerType()),
+        StructField('song', StringType()),
+        StructField('status', IntegerType()),
+        StructField('ts', LongType()),
+        StructField('userAgent', StringType()),
+        StructField('userId', StringType())
+    ])
+    
+    df = spark.read.schema(schema).json(log_data)
     
     # filter by actions for song plays
     df = df.filter(df.page == "NextSong")
@@ -115,6 +149,8 @@ def process_log_data(spark, input_data, output_data):
     # extract columns from joined song and log datasets to create songplays table 
     songplays_table = df.join(song_df, song_df.title == df.song) \
                         .withColumn("sonplay_id", monotonically_increasing_id()) \
+                        .withColumn("month", month(col("start_time"))) \
+                        .withColumn("year", year(col("start_time"))) \
                         .select(
                             col("sonplay_id"),
                             col("start_time"),
@@ -124,21 +160,22 @@ def process_log_data(spark, input_data, output_data):
                             "artist_id",
                             col("sessionId").alias("session_id"),
                             "location",
-                            col("userAgent").alias("user_agent")
+                            col("userAgent").alias("user_agent"),
+                            "year",
+                            "month"
                         )
     
     # write songplays table to parquet files partitioned by year and month
-    songplays_table.write.mode('overwrite').parquet(f'{output_data}/songplays.parquet')
+    songplays_table.write.mode('overwrite').partitionBy('year', 'month').parquet(f'{output_data}/songplays.parquet')
 
 
 def main():
     spark = create_spark_session()
     input_data = "s3a://udacity-dend/"
     output_data = "s3a://njade-sparkify"
-                                        
+                                    
     process_song_data(spark, input_data, output_data)    
     process_log_data(spark, input_data, output_data)
-    spark.close()
 
 
 if __name__ == "__main__":
