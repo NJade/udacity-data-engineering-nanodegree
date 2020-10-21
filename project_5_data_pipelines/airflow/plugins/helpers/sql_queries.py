@@ -1,4 +1,12 @@
 class SqlQueries:
+    copy_sql = ("""
+        COPY {}
+        FROM '{}'
+        ACCESS_KEY_ID '{}'
+        SECRET_ACCESS_KEY '{}'
+        json '{}'
+    """)
+    
     songplay_table_insert = ("""
         SELECT
                 md5(events.sessionid || events.start_time) songplay_id,
@@ -39,4 +47,8 @@ class SqlQueries:
         SELECT start_time, extract(hour from start_time), extract(day from start_time), extract(week from start_time), 
                extract(month from start_time), extract(year from start_time), extract(dayofweek from start_time)
         FROM songplays
+    """)
+    
+    get_records_num = ("""
+        SELECT COUNT(*) FROM {}
     """)
